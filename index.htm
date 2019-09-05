@@ -2,7 +2,6 @@
 <html>
     <head>
         <title>S3 Upload - Raw Javascript</title>
-        <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
         <script src="videoThumbnails.js"></script>
         <link rel="stylesheet" href="assets/scrmhub.css" / >
     </head>
@@ -41,6 +40,10 @@
         function upload() {
             var thumbnailCount      = 9;
             var thumbnailCounter    = 0;
+            const  screenShotsEl = document.getElementById('screenShots');
+            const progressEl = document.getElementById('progress');
+            const uploadBtn = document.getElementById('upload');
+            const cancelBtn = document.getElementById('cancel');
 
             //Use a global to support the abort
             var thumbnails = new VideoThumbnails({
@@ -52,28 +55,33 @@
                 ga('send', 'event', 'capture', 'before');
 
                 //reset html
-                $('#screenShots').html('');
+                document.getElementById('screenShots').innerHTML = '';
 
                 //Hide buttons
-                $('#upload').hide();
-                $('#cancel').on('click', function() {
-                    thumbnails.abort();                    
-                }).show();
+                uploadBtn.style.display = "none";
+                cancelBtn.addEventListener("click", ()=>{thumbnails.abort()});
+                cancelBtn.style.display = "block";
             });
 
             //Started
             thumbnails.on('startCapture', function() {
                 ga('send', 'event', 'capture', 'start');
                 console.log('Capture started');
-                $('#progress').show().attr('max', thumbnailCount).attr('value', 0);
+                progressEl.style.display = "block";
+                progressEl.setAttribute("max",thumbnailCount);
+                progressEl.setAttribute("value",0);
             });
 
             //Captured a thumb
             thumbnails.on('capture', function(image) {
                 thumbnailCounter++;
-                $('#screenShots').append($('<li>').append($('<img>').attr('src', image)));
+                let listNode = document.createElement('li');
+                let imageNode = document.createElement('img');
+                imageNode.setAttribute('src',image);
+                listNode.appendChild(imageNode);
+                screenShotsEl.appendChild(listNode);
                 ga('send', 'event', 'capture', 'image ready');
-                $('#progress').attr('value', thumbnailCounter);
+                progressEl.setAttribute("value",thumbnailCounter)
             });
 
             //User aborted thumbnail creation
@@ -82,30 +90,31 @@
                 console.log('aborted');
 
                 //Turn buttons back on
-                $('#upload').show();
-                $('#cancel').hide();
-                $('#progress').hide();
+                uploadBtn.style.display = "block";
+                cancelBtn.style.display = "none";
+                cancelBtn.style.display = "block";
+                progressEl.style.display = "none"
 
                 //Clean out the images if you want
-                $('#screenShots').html('');
+                screenShotsEl.innerHTML = ''
             });
 
             //Cannot play video natively
             thumbnails.on('unsupported', function() {
                 ga('send', 'event', 'capture', 'unsupported media');
                 console.log('unsupported');
-                $('#upload').show();
-                $('#cancel').hide();
-                $('#progress').hide();
+                uploadBtn.style.display = "block";
+                cancelBtn.style.display = "none";
+                progressEl.style.display = "none"
             });
 
             //Completed the thumbs
             thumbnails.on('complete', function(thumbs) {
                 ga('send', 'event', 'capture', 'complete');
                 console.log('all done', thumbs);
-                $('#upload').show();
-                $('#cancel').hide();
-                $('#progress').hide();
+                uploadBtn.style.display = "block";
+                cancelBtn.style.display = "none";
+                progressEl.style.display = "none"
             });
 
             //Full stats post complete with all thumbs
@@ -113,8 +122,8 @@
                 ga('send', 'event', 'capture', 'complete details');
                 console.log('completeDetail', details);
             });
-
-            thumbnails.capture($('#file')[0].files[0]);
+            console.log(document.getElementById('file').files[0])
+            thumbnails.capture(document.getElementById('file').files[0]);
         }
         </script>
 
